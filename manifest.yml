@@ -1,0 +1,248 @@
+modules:
+  rovo:mcp:
+    - key: changeproof-mcp-server
+      name: ChangeProof MCP
+      tools:
+        - assess-change-control
+        - scan-sop-blast-radius
+        - verify-dual-signoff
+        - generate-audit-packet
+        - verify-audit-chain
+        - log-capa-deviation
+
+  rovo:agent:
+    - key: changeproof-auditor
+      name: ChangeProof Auditor
+      description: >-
+        Regulated change-control and CAPA compliance auditor for 21 CFR Part 11,
+        ISO 13485, and AS9100D workflows across Jira and Confluence.
+      prompt: >-
+        You are ChangeProof Auditor, a regulated quality and engineering compliance specialist.
+        When auditing a Jira change request or CAPA issue, always run assess-change-control first,
+        then inspect downstream Confluence SOP impact via scan-sop-blast-radius and check hash-chain
+        integrity via verify-audit-chain before recommending release readiness. Never approve a
+        self-signed change where proposer and QA approver share the same accountId. When exporting
+        evidence for inspectors, invoke generate-audit-packet and report the exact packetDigest and
+        chain headHash verbatim.
+      conversationStarters:
+        - Audit this Jira change request for 21 CFR Part 11 readiness
+        - Scan which Confluence SOPs are impacted by this engineering change
+        - Verify the SHA-256 dual sign-off chain for this issue
+        - Generate an inspector-ready ISO 13485 audit dossier
+      actions:
+        - assess-change-control
+        - scan-sop-blast-radius
+        - verify-dual-signoff
+        - generate-audit-packet
+        - verify-audit-chain
+        - log-capa-deviation
+
+  action:
+    - key: assess-change-control
+      name: Assess Change Control Readiness
+      function: assessChangeControlFn
+      actionVerb: GET
+      description: >-
+        Evaluate a Jira change-control or CAPA issue against 21 CFR Part 11, ISO 13485,
+        or AS9100D compliance gates, FMEA RPN risk tier, SOP linkage, and sign-off status.
+      inputs:
+        issueKey:
+          title: Jira Issue Key
+          type: string
+          required: true
+          description: Jira issue key to audit (for example, QMS-42 or CAPA-108).
+        standardCode:
+          title: Regulatory Standard
+          type: string
+          required: false
+          description: Optional regulatory profile — FDA_21CFR11, ISO_13485, or AS9100D.
+        severity:
+          title: FMEA Severity
+          type: integer
+          required: false
+          description: Optional FMEA severity rating from 1 to 10.
+        occurrence:
+          title: FMEA Occurrence
+          type: integer
+          required: false
+          description: Optional FMEA occurrence rating from 1 to 10.
+        detectability:
+          title: FMEA Detectability
+          type: integer
+          required: false
+          description: Optional FMEA detectability rating from 1 to 10.
+
+    - key: scan-sop-blast-radius
+      name: Scan Confluence SOP Blast Radius
+      function: scanSopBlastRadiusFn
+      actionVerb: GET
+      description: >-
+        Trace controlled Confluence SOPs and Teamwork Graph links impacted by a Jira
+        change request, flagging critical procedures and overdue review cycles.
+      inputs:
+        issueKey:
+          title: Jira Issue Key
+          type: string
+          required: true
+          description: Jira issue key whose description and graph links will be traced.
+        standardCode:
+          title: Regulatory Standard
+          type: string
+          required: false
+          description: Regulatory profile for review-cycle thresholds (FDA_21CFR11, ISO_13485, AS9100D).
+
+    - key: verify-dual-signoff
+      name: Record and Verify Dual Sign-off
+      function: verifyDualSignoffFn
+      actionVerb: CREATE
+      description: >-
+        Enforce separation-of-duties (proposer != QA approver != release authority) and
+        append a cryptographically chained SHA-256 attestation to Forge KVS storage.
+      inputs:
+        issueKey:
+          title: Jira Issue Key
+          type: string
+          required: true
+          description: Jira issue key receiving the compliance attestation.
+        role:
+          title: Signer Role
+          type: string
+          required: true
+          description: Role performing attestation — PROPOSER, QA_APPROVER, or RELEASE_AUTHORITY.
+        decision:
+          title: Decision
+          type: string
+          required: true
+          description: Attestation decision — APPROVED, REJECTED, or CONDITIONAL.
+        rationale:
+          title: Audit Rationale
+          type: string
+          required: true
+          description: Concise objective evidence rationale recorded in the immutable hash chain.
+        standardCode:
+          title: Regulatory Standard
+          type: string
+          required: false
+          description: Regulatory profile — FDA_21CFR11, ISO_13485, or AS9100D.
+
+    - key: generate-audit-packet
+      name: Generate Inspector Audit Packet
+      function: generateAuditPacketFn
+      actionVerb: GET
+      description: >-
+        Compile an inspector-ready Markdown and JSON compliance dossier with RPN matrix,
+        impacted Confluence SOPs, CAPA table, and cryptographic SHA-256 chain proof.
+      inputs:
+        issueKey:
+          title: Jira Issue Key
+          type: string
+          required: true
+          description: Jira issue key to compile into a regulatory inspection dossier.
+        standardCode:
+          title: Regulatory Standard
+          type: string
+          required: false
+          description: Regulatory profile — FDA_21CFR11, ISO_13485, or AS9100D.
+
+    - key: verify-audit-chain
+      name: Verify SHA-256 Audit Chain
+      function: verifyAuditChainFn
+      actionVerb: GET
+      description: >-
+        Recompute every SHA-256 payloadHash and entryHash link from Genesis to prove
+        zero tampering across all compliance attestations on a Jira issue.
+      inputs:
+        issueKey:
+          title: Jira Issue Key
+          type: string
+          required: true
+          description: Jira issue key whose cryptographic audit ledger will be verified.
+
+    - key: log-capa-deviation
+      name: Log CAPA Deviation Record
+      function: logCapaDeviationFn
+      actionVerb: CREATE
+      description: >-
+        Attach a structured CAPA or quality deviation record to a Jira change request,
+        record it in the SHA-256 audit chain, and post a traceable Jira comment.
+      inputs:
+        issueKey:
+          title: Jira Issue Key
+          type: string
+          required: true
+          description: Jira issue key linked to the deviation or CAPA.
+        capaId:
+          title: CAPA Identifier
+          type: string
+          required: true
+          description: Controlled CAPA or deviation identifier (for example, CAPA-2026-014).
+        severity:
+          title: Deviation Severity
+          type: string
+          required: true
+          description: Severity level — CRITICAL, MAJOR, or MINOR.
+        rootCause:
+          title: Root Cause Summary
+          type: string
+          required: true
+          description: Documented root cause summary for quality traceability.
+        containmentAction:
+          title: Containment Action
+          type: string
+          required: true
+          description: Immediate containment or preventive action taken.
+
+  jira:issuePanel:
+    - key: changeproof-issue-panel
+      resource: issue-panel-ui
+      resolver:
+        function: panelResolver
+      render: native
+      title: ChangeProof Compliance
+      icon: https://developer.atlassian.com/platform/forge/images/icons/issue-panel-icon.svg
+
+  confluence:contentAction:
+    - key: changeproof-sop-impact
+      resource: confluence-action-ui
+      resolver:
+        function: panelResolver
+      render: native
+      title: ChangeProof SOP Impact
+
+  function:
+    - key: panelResolver
+      handler: index.panelResolver
+    - key: assessChangeControlFn
+      handler: index.assessChangeControlFn
+    - key: scanSopBlastRadiusFn
+      handler: index.scanSopBlastRadiusFn
+    - key: verifyDualSignoffFn
+      handler: index.verifyDualSignoffFn
+    - key: generateAuditPacketFn
+      handler: index.generateAuditPacketFn
+    - key: verifyAuditChainFn
+      handler: index.verifyAuditChainFn
+    - key: logCapaDeviationFn
+      handler: index.logCapaDeviationFn
+
+resources:
+  - key: issue-panel-ui
+    path: src/frontend/issuePanel.jsx
+  - key: confluence-action-ui
+    path: src/frontend/confluenceAction.jsx
+
+permissions:
+  scopes:
+    - read:jira-work
+    - write:jira-work
+    - read:jira-user
+    - read:confluence-content.all
+    - search:confluence
+    - storage:app
+
+app:
+  runtime:
+    name: nodejs22.x
+    memoryMB: 256
+    architecture: arm64
+  id: ari:cloud:ecosystem::app/00000000-0000-4000-8000-000000000001
