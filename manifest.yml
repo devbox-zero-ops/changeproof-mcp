@@ -17,13 +17,15 @@ modules:
         Regulated change-control and CAPA compliance auditor for 21 CFR Part 11,
         ISO 13485, and AS9100D workflows across Jira and Confluence.
       prompt: >-
-        You are ChangeProof Auditor, a regulated quality and engineering compliance specialist.
-        When auditing a Jira change request or CAPA issue, always run assess-change-control first,
-        then inspect downstream Confluence SOP impact via scan-sop-blast-radius and check hash-chain
-        integrity via verify-audit-chain before recommending release readiness. Never approve a
-        self-signed change where proposer and QA approver share the same accountId. When exporting
-        evidence for inspectors, invoke generate-audit-packet and report the exact packetDigest and
-        chain headHash verbatim.
+        You are ChangeProof Auditor, a regulated quality and engineering
+        compliance specialist. When auditing a Jira change request or CAPA
+        issue, always run assess-change-control first, then inspect downstream
+        Confluence SOP impact via scan-sop-blast-radius and check hash-chain
+        integrity via verify-audit-chain before recommending release readiness.
+        Never approve a self-signed change where proposer and QA approver share
+        the same accountId. When exporting evidence for inspectors, invoke
+        generate-audit-packet and report the exact packetDigest and chain
+        headHash verbatim.
       conversationStarters:
         - Audit this Jira change request for 21 CFR Part 11 readiness
         - Scan which Confluence SOPs are impacted by this engineering change
@@ -43,8 +45,9 @@ modules:
       function: assessChangeControlFn
       actionVerb: GET
       description: >-
-        Evaluate a Jira change-control or CAPA issue against 21 CFR Part 11, ISO 13485,
-        or AS9100D compliance gates, FMEA RPN risk tier, SOP linkage, and sign-off status.
+        Evaluate a Jira change-control or CAPA issue against 21 CFR Part 11, ISO
+        13485, or AS9100D compliance gates, FMEA RPN risk tier, SOP linkage, and
+        sign-off status.
       inputs:
         issueKey:
           title: Jira Issue Key
@@ -77,8 +80,9 @@ modules:
       function: scanSopBlastRadiusFn
       actionVerb: GET
       description: >-
-        Trace controlled Confluence SOPs and Teamwork Graph links impacted by a Jira
-        change request, flagging critical procedures and overdue review cycles.
+        Trace controlled Confluence SOPs and Teamwork Graph links impacted by a
+        Jira change request, flagging critical procedures and overdue review
+        cycles.
       inputs:
         issueKey:
           title: Jira Issue Key
@@ -89,15 +93,17 @@ modules:
           title: Regulatory Standard
           type: string
           required: false
-          description: Regulatory profile for review-cycle thresholds (FDA_21CFR11, ISO_13485, AS9100D).
+          description: Regulatory profile for review-cycle thresholds (FDA_21CFR11,
+            ISO_13485, AS9100D).
 
     - key: verify-dual-signoff
       name: Record and Verify Dual Sign-off
       function: verifyDualSignoffFn
       actionVerb: CREATE
       description: >-
-        Enforce separation-of-duties (proposer != QA approver != release authority) and
-        append a cryptographically chained SHA-256 attestation to Forge KVS storage.
+        Enforce separation-of-duties (proposer != QA approver != release
+        authority) and append a cryptographically chained SHA-256 attestation to
+        Forge KVS storage.
       inputs:
         issueKey:
           title: Jira Issue Key
@@ -108,7 +114,8 @@ modules:
           title: Signer Role
           type: string
           required: true
-          description: Role performing attestation — PROPOSER, QA_APPROVER, or RELEASE_AUTHORITY.
+          description: Role performing attestation — PROPOSER, QA_APPROVER, or
+            RELEASE_AUTHORITY.
         decision:
           title: Decision
           type: string
@@ -118,7 +125,8 @@ modules:
           title: Audit Rationale
           type: string
           required: true
-          description: Concise objective evidence rationale recorded in the immutable hash chain.
+          description: Concise objective evidence rationale recorded in the immutable hash
+            chain.
         standardCode:
           title: Regulatory Standard
           type: string
@@ -130,8 +138,9 @@ modules:
       function: generateAuditPacketFn
       actionVerb: GET
       description: >-
-        Compile an inspector-ready Markdown and JSON compliance dossier with RPN matrix,
-        impacted Confluence SOPs, CAPA table, and cryptographic SHA-256 chain proof.
+        Compile an inspector-ready Markdown and JSON compliance dossier with RPN
+        matrix, impacted Confluence SOPs, CAPA table, and cryptographic SHA-256
+        chain proof.
       inputs:
         issueKey:
           title: Jira Issue Key
@@ -149,8 +158,8 @@ modules:
       function: verifyAuditChainFn
       actionVerb: GET
       description: >-
-        Recompute every SHA-256 payloadHash and entryHash link from Genesis to prove
-        zero tampering across all compliance attestations on a Jira issue.
+        Recompute every SHA-256 payloadHash and entryHash link from Genesis to
+        prove zero tampering across all compliance attestations on a Jira issue.
       inputs:
         issueKey:
           title: Jira Issue Key
@@ -163,8 +172,9 @@ modules:
       function: logCapaDeviationFn
       actionVerb: CREATE
       description: >-
-        Attach a structured CAPA or quality deviation record to a Jira change request,
-        record it in the SHA-256 audit chain, and post a traceable Jira comment.
+        Attach a structured CAPA or quality deviation record to a Jira change
+        request, record it in the SHA-256 audit chain, and post a traceable Jira
+        comment.
       inputs:
         issueKey:
           title: Jira Issue Key
@@ -245,4 +255,4 @@ app:
     name: nodejs22.x
     memoryMB: 256
     architecture: arm64
-  id: ari:cloud:ecosystem::app/00000000-0000-4000-8000-000000000001
+  id: ari:cloud:ecosystem::app/7a250d09-0e72-4bcf-a771-f645dcb5ed83
